@@ -36,9 +36,9 @@ BuildRequires:	libogg-devel
 BuildRequires:	liboggz-devel
 BuildRequires:	libsamplerate-devel
 BuildRequires:	libshout-devel
-#BuildRequires:	libslp-dev
 %{?with_sndfile:BuildRequires:	libsndfile-devel}
 BuildRequires:	libvorbis-devel
+BuildRequires:	openslp-devel
 BuildRequires:	openssl-devel
 BuildRequires:	pkgconfig
 BuildRequires:	sed >= 4.0
@@ -247,24 +247,11 @@ rm -rf $RPM_BUILD_ROOT
 %{_mandir}/man1/roarmon.1*
 %{_mandir}/man1/roarsockconnect.1*
 %{_mandir}/man7/*.7*
-%{_libdir}/libroar.so
-%{_libdir}/libroareio.so
-%{_libdir}/libroarlight.so
 
 %attr(755,root,root) %{_bindir}/roarfish
 %attr(755,root,root) %{_bindir}/yiff
 %attr(755,root,root) %{_bindir}/yplay
 %attr(755,root,root) %{_bindir}/yshutdown
-%attr(755,root,root) %ghost %{_libdir}/libroar.so.0
-%attr(755,root,root) %{_libdir}/libroar.so.*.*.*
-%attr(755,root,root) %ghost %{_libdir}/libroardsp.so.0
-%attr(755,root,root) %{_libdir}/libroardsp.so.*.*.*
-%attr(755,root,root) %ghost %{_libdir}/libroareio.so.0
-%attr(755,root,root) %{_libdir}/libroareio.so.*.*.*
-%attr(755,root,root) %ghost %{_libdir}/libroarlight.so.0
-%attr(755,root,root) %{_libdir}/libroarlight.so.*.*.*
-%attr(755,root,root) %ghost %{_libdir}/libroarmidi.so.0
-%attr(755,root,root) %{_libdir}/libroarmidi.so.*.*.*
 %attr(755,root,root) %{_libdir}/libroaross.so
 %attr(755,root,root) %ghost %{_libdir}/libroaross.so.0
 %attr(755,root,root) %{_libdir}/libroaross.so.*.*.*
@@ -278,8 +265,16 @@ rm -rf $RPM_BUILD_ROOT
 
 %files -n libroar
 %defattr(644,root,root,755)
-%{_libdir}/libroardsp.so
-%{_libdir}/libroarmidi.so
+%attr(755,root,root) %ghost %{_libdir}/libroar.so.0
+%attr(755,root,root) %{_libdir}/libroar.so.*.*.*
+%attr(755,root,root) %ghost %{_libdir}/libroardsp.so.0
+%attr(755,root,root) %{_libdir}/libroardsp.so.*.*.*
+%attr(755,root,root) %ghost %{_libdir}/libroarmidi.so.0
+%attr(755,root,root) %{_libdir}/libroarmidi.so.*.*.*
+%attr(755,root,root) %ghost %{_libdir}/libroarlight.so.0
+%attr(755,root,root) %{_libdir}/libroarlight.so.*.*.*
+%attr(755,root,root) %ghost %{_libdir}/libroareio.so.0
+%attr(755,root,root) %{_libdir}/libroareio.so.*.*.*
 
 %files -n libroar-devel
 %defattr(644,root,root,755)
@@ -297,6 +292,11 @@ rm -rf $RPM_BUILD_ROOT
 %{_includedir}/roaraudio
 %{_mandir}/man1/roar-config.1*
 %{_mandir}/man3/*.3*
+%{_libdir}/libroar.so
+%{_libdir}/libroardsp.so
+%{_libdir}/libroarmidi.so
+%{_libdir}/libroarlight.so
+%{_libdir}/libroareio.so
 
 %files server
 %defattr(644,root,root,755)
