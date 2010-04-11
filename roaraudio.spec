@@ -11,6 +11,8 @@
 %bcond_without	pulseaudio  # without pulseaudio output
 %bcond_without	sndfile		# without sndfile output
 %bcond_without	yiff		# ...
+%bcond_without	xmms		# don't build XMMS plugin
+%bcond_without	audacious	# without audacious player support module
 
 # celt version required for roaraudio
 %define celt_release 0.7.1
@@ -27,6 +29,7 @@ URL:		http://roaraudio.keep-cool.org/
 Source0:	http://roaraudio.keep-cool.org/dl/%{name}-%{version}%{subver}.tar.gz
 # Source0-md5:	001e5d9ecc65d80e14486d5157eb5d42
 %{?with_arts:BuildRequires:	arts-devel}
+%{?with_audacious:BuildRequires: audacious-devel}
 #BuildRequires:	celt-devel >= %{celt_release}
 %{?with_esd:BuildRequires:	esound-devel}
 BuildRequires:	libao-devel
@@ -43,6 +46,7 @@ BuildRequires:	openssl-devel
 BuildRequires:	pkgconfig
 BuildRequires:	sed >= 4.0
 BuildRequires:	speex-devel >= 1:1.2
+%{?with_xmms:BuildRequires:	xmms-devel}
 BuildRoot:	%{tmpdir}/%{name}-%{version}-root-%(id -u -n)
 
 %description
@@ -91,6 +95,26 @@ Requires:	gnuplot
 %description utils
 This package contains command line utilities for the RoarAudio sound
 system.
+
+%package -n xmms-output-roar
+Summary:	RoarAudio sound system plugin for the XMMS
+Group:		Libraries
+Requires:	%{name} = %{version}-%{release}
+Requires:	libao
+
+%description -n xmms-output-roar
+This package contains the XMMS sound system plugin for the Audio
+Output Library.
+
+%package -n audacious-output-roar
+Summary:	RoarAudio sound system plugin for the Audacious Media Player
+Group:		Libraries
+Requires:	%{name} = %{version}-%{release}
+Requires:	libao
+
+%description -n audacious-output-roar
+This package contains the Audacious Media Player sound system plugin for the Audio
+Output Library.
 
 %package -n libao-roar
 Summary:	RoarAudio sound system plugin for the Audio Output Library
@@ -170,6 +194,8 @@ sed -i -e '
 	--prefix-comp-bins %{_bindir} \
 	--prefix-comp-libs %{_libdir} \
 	%{!?with_arts:--no-artsc} \
+	%{!?with_xmms:--disable-xmms} \
+	%{!?with_audacious:--without-audacious} \
 	--runtime-detect \
 	--cdrom /dev/cdrom \
 	--tty /dev/tty \
@@ -258,11 +284,6 @@ rm -rf $RPM_BUILD_ROOT
 %{_mandir}/man1/roarfish.1*
 %{_mandir}/man1/roarmonhttp.1*
 
-# audacious
-%{_libdir}/audacious/Output/libroar.so
-# xmms
-%{_libdir}/xmms/Output/libroar.so
-
 %files -n libroar
 %defattr(644,root,root,755)
 %attr(755,root,root) %ghost %{_libdir}/libroar.so.0
@@ -314,6 +335,17 @@ rm -rf $RPM_BUILD_ROOT
 %{_mandir}/man1/roarphone.1*
 %{_mandir}/man1/roarsin.1*
 %{_mandir}/man1/roarvumeter.1*
+
+%if %{with audacious}
+%files -n audacious-output-roar
+%{_libdir}/audacious/Output/libroar.so
+%endif
+
+%if %{with xmms}
+%files -n xmms-output-roar
+%defattr(644,root,root,755)
+%attr(755,root,root) %{xmms_output_plugindir}/libroar.so
+%endif
 
 %files compat-esound
 %defattr(644,root,root,755)
