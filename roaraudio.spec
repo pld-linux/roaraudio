@@ -1,8 +1,10 @@
 # TODO
 # - see HACKING for packaging suggestions
+# - libroar/libroar-devel should be complete, rest needs more work
 # - figure out which libs go where
 # - figure out which are drivers and which are compat
 # - drop all the compat stuff?
+# - roarmonhttp as subpackage (cgi/inetd server)
 #
 # Conditional build:
 %bcond_with		arts        # with arts audio output
@@ -35,6 +37,7 @@ Source0:	http://roaraudio.keep-cool.org/dl/%{name}-%{version}%{subver}.tar.gz
 BuildRequires:	libao-devel
 BuildRequires:	libdnet-devel
 BuildRequires:	libfishsound-devel
+%{?with_fishsound:BuildRequires:	libfishsound-devel}
 BuildRequires:	libogg-devel
 BuildRequires:	liboggz-devel
 BuildRequires:	libsamplerate-devel
@@ -113,8 +116,8 @@ Requires:	%{name} = %{version}-%{release}
 Requires:	libao
 
 %description -n audacious-output-roar
-This package contains the Audacious Media Player sound system plugin for the Audio
-Output Library.
+This package contains the Audacious Media Player sound system plugin
+for the Audio Output Library.
 
 %package -n libao-roar
 Summary:	RoarAudio sound system plugin for the Audio Output Library
@@ -247,6 +250,7 @@ rm -rf $RPM_BUILD_ROOT
 %attr(755,root,root) %{_bindir}/roarbidir
 %attr(755,root,root) %{_bindir}/roarcat*
 %attr(755,root,root) %{_bindir}/roarctl
+%attr(755,root,root) %{_bindir}/roarfish
 %attr(755,root,root) %{_bindir}/roarify
 %attr(755,root,root) %{_bindir}/roarinterconnect
 %attr(755,root,root) %{_bindir}/roarlight
@@ -257,32 +261,30 @@ rm -rf $RPM_BUILD_ROOT
 %attr(755,root,root) %{_bindir}/roarsocktypes
 %attr(755,root,root) %{_bindir}/roartypes
 %attr(755,root,root) %{_bindir}/roarvorbis
-%{_mandir}/man1/roarbidir.1*
-%{_mandir}/man1/roartypes.1*
-%{_mandir}/man1/roarvorbis.1*
-%{_mandir}/man1/roarshout.1*
 %{_mandir}/man1/roarbaseclients.1*
-%{_mandir}/man1/roarradio.1*
-%{_mandir}/man1/roarsocktypes.1*
-%{_mandir}/man1/roartestclients.1*
-%{_mandir}/man1/roarlight.1*
-%{_mandir}/man1/roarinterconnect.1*
+%{_mandir}/man1/roarbidir.1*
 %{_mandir}/man1/roarcat*.1*
 %{_mandir}/man1/roarctl.1*
+%{_mandir}/man1/roarfish.1*
 %{_mandir}/man1/roarify.1*
+%{_mandir}/man1/roarinterconnect.1*
+%{_mandir}/man1/roarlight.1*
 %{_mandir}/man1/roarmon.1*
+%{_mandir}/man1/roarradio.1*
+%{_mandir}/man1/roarshout.1*
 %{_mandir}/man1/roarsockconnect.1*
+%{_mandir}/man1/roarsocktypes.1*
+%{_mandir}/man1/roartestclients.1*
+%{_mandir}/man1/roartypes.1*
+%{_mandir}/man1/roarvorbis.1*
 %{_mandir}/man7/*.7*
 
-%attr(755,root,root) %{_bindir}/roarfish
 %attr(755,root,root) %{_bindir}/yiff
 %attr(755,root,root) %{_bindir}/yplay
 %attr(755,root,root) %{_bindir}/yshutdown
 %attr(755,root,root) %{_libdir}/libroaross.so
 %attr(755,root,root) %ghost %{_libdir}/libroaross.so.0
 %attr(755,root,root) %{_libdir}/libroaross.so.*.*.*
-%{_mandir}/man1/roarfish.1*
-%{_mandir}/man1/roarmonhttp.1*
 
 %files -n libroar
 %defattr(644,root,root,755)
@@ -322,6 +324,7 @@ rm -rf $RPM_BUILD_ROOT
 %files server
 %defattr(644,root,root,755)
 %attr(755,root,root) %{_bindir}/roard
+%{_mandir}/man1/roarmonhttp.1*
 %{_mandir}/man1/roard.1*
 
 %files utils
@@ -338,6 +341,7 @@ rm -rf $RPM_BUILD_ROOT
 
 %if %{with audacious}
 %files -n audacious-output-roar
+%defattr(644,root,root,755)
 %{_libdir}/audacious/Output/libroar.so
 %endif
 
