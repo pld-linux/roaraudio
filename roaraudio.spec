@@ -12,12 +12,12 @@
 %bcond_without	nas     	# without NAS audio output
 %bcond_without	pulseaudio  # without pulseaudio output
 %bcond_without	sndfile		# without sndfile output
-%bcond_without	yiff		# ...
+%bcond_without	yiff		# without YIFF sound server support
 %bcond_without	xmms		# don't build XMMS plugin
 %bcond_without	audacious	# without audacious player support module
 
 # celt version required for roaraudio
-%define celt_release 0.7.1
+%define celt_release 0.6.1
 
 %define		subver	beta4
 %define		rel		0.1
@@ -32,7 +32,7 @@ Source0:	http://roaraudio.keep-cool.org/dl/%{name}-%{version}%{subver}.tar.gz
 # Source0-md5:	001e5d9ecc65d80e14486d5157eb5d42
 %{?with_arts:BuildRequires:	arts-devel}
 %{?with_audacious:BuildRequires: audacious-devel}
-#BuildRequires:	celt-devel >= %{celt_release}
+BuildRequires:	celt-devel >= %{celt_release}
 %{?with_esd:BuildRequires:	esound-devel}
 BuildRequires:	libao-devel
 BuildRequires:	libdnet-devel
@@ -50,6 +50,7 @@ BuildRequires:	pkgconfig
 BuildRequires:	sed >= 4.0
 BuildRequires:	speex-devel >= 1:1.2
 %{?with_xmms:BuildRequires:	xmms-devel}
+%{?with_yiff:BuildRequires:	yiff-devel}
 BuildRoot:	%{tmpdir}/%{name}-%{version}-root-%(id -u -n)
 
 %description
@@ -70,7 +71,7 @@ system.
 %package -n libroar-devel
 Summary:	RoarAudio sound system header files and libraries
 Group:		Development/Libraries
-Requires:	%{name} = %{version}-%{release}
+Requires:	libroar = %{version}-%{release}
 
 %description -n libroar-devel
 This package contains static libraries and header files needed to
@@ -174,6 +175,15 @@ Requires:	%{name} = %{version}-%{release}
 This package contains the sndfile compatibility system for the
 RoarAudio sound system.
 
+%package compat-yiff
+Summary:	RoarAudio sound system compatibility system for YIFF
+Group:		Libraries
+Requires:	%{name} = %{version}-%{release}
+
+%description compat-yiff
+This package contains the YIFF compatibility system for the RoarAudio
+sound system.
+
 %prep
 %setup -q -n %{name}-%{version}%{subver}
 
@@ -244,6 +254,9 @@ rm -rf $RPM_BUILD_ROOT
 %post	compat-arts -p /sbin/ldconfig
 %postun	compat-arts -p /sbin/ldconfig
 
+%post	compat-pulseaudio -p /sbin/ldconfig
+%postun	compat-pulseaudio -p /sbin/ldconfig
+
 %files
 %defattr(644,root,root,755)
 %doc AUTHORS ChangeLog HACKING README TODO
@@ -279,9 +292,6 @@ rm -rf $RPM_BUILD_ROOT
 %{_mandir}/man1/roarvorbis.1*
 %{_mandir}/man7/*.7*
 
-%attr(755,root,root) %{_bindir}/yiff
-%attr(755,root,root) %{_bindir}/yplay
-%attr(755,root,root) %{_bindir}/yshutdown
 %attr(755,root,root) %{_libdir}/libroaross.so
 %attr(755,root,root) %ghost %{_libdir}/libroaross.so.0
 %attr(755,root,root) %{_libdir}/libroaross.so.*.*.*
@@ -351,6 +361,7 @@ rm -rf $RPM_BUILD_ROOT
 %attr(755,root,root) %{xmms_output_plugindir}/libroar.so
 %endif
 
+%if %{with esd}
 %files compat-esound
 %defattr(644,root,root,755)
 %attr(755,root,root) %{_bindir}/esd
@@ -368,6 +379,7 @@ rm -rf $RPM_BUILD_ROOT
 %attr(755,root,root) %{_libdir}/libesd.so
 %attr(755,root,root) %{_libdir}/libesd.so.0.2
 %attr(755,root,root) %{_libdir}/libesd.so.0.2.36
+%endif
 
 %if %{with arts}
 %files compat-arts
@@ -375,19 +387,22 @@ rm -rf $RPM_BUILD_ROOT
 %attr(755,root,root) %{_bindir}/artscat
 %attr(755,root,root) %{_bindir}/artsd
 %attr(755,root,root) %{_bindir}/artsplay
-%attr(755,root,root) %{_libdir}/libroarartsc.so
 # compat libs pointing to libroarpulse
 %attr(755,root,root) %{_libdir}/libartsc.so.0
 # needed?
 %attr(755,root,root) %{_libdir}/libartsc.so
 %attr(755,root,root) %{_libdir}/libartsc.so.0.0
 %attr(755,root,root) %{_libdir}/libartsc.so.0.0.0
+%attr(755,root,root) %{_libdir}/libroarartsc.so
 %endif
 
+%if %{with nas}
 %files compat-nas
 %defattr(644,root,root,755)
 %attr(755,root,root) %{_bindir}/auplay
+%endif
 
+%if %{with pulseaudio}
 %files compat-pulseaudio
 %defattr(644,root,root,755)
 %attr(755,root,root) %{_bindir}/pacat
@@ -408,9 +423,27 @@ rm -rf $RPM_BUILD_ROOT
 %attr(755,root,root) %{_libdir}/libpulse.so.0.1.0
 %attr(755,root,root) %{_libdir}/libpulse.so.0.4
 %attr(755,root,root) %{_libdir}/libpulse.so.0.4.1
+%endif
 
+%if %{with sndfile}
 %files compat-sndfile
 %defattr(644,root,root,755)
-%attr(755,root,root) %{_libdir}/libroarsndio.so
 %attr(755,root,root) %ghost %{_libdir}/libroarsndio.so.0
 %attr(755,root,root) %{_libdir}/libroarsndio.so.*.*.*
+# needed?
+%attr(755,root,root) %{_libdir}/libroarsndio.so
+%endif
+
+%if %{with yiff}
+%files compat-yiff
+%defattr(644,root,root,755)
+%attr(755,root,root) %{_bindir}/yiff
+%attr(755,root,root) %{_bindir}/yplay
+%attr(755,root,root) %{_bindir}/yshutdown
+%attr(755,root,root) %ghost %{_libdir}/libroaryiff.so.0
+%attr(755,root,root) %{_libdir}/libroaryiff.so.*.*.*
+%attr(755,root,root) %{_libdir}/libY2.so.14
+# needed?
+%attr(755,root,root) %{_libdir}/libY2.so
+%attr(755,root,root) %{_libdir}/libroaryiff.so
+%endif
