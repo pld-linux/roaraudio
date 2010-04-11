@@ -1,8 +1,16 @@
 # TODO
 # - see HACKING for packaging suggestions
+# - figure out which libs go where
+# - figure out which are drivers and which are compat
+# - drop all the compat stuff?
 #
 # Conditional build:
-%bcond_with	arts		# build with tests
+%bcond_with		arts        # with arts audio output
+%bcond_without	esd     	# disable EsounD sound support
+%bcond_without	nas     	# without NAS audio output
+%bcond_without	pulseaudio  # without pulseaudio output
+%bcond_without	sndfile		# without sndfile output
+%bcond_without	yiff		# ...
 
 # celt version required for roaraudio
 %define celt_release 0.7.1
@@ -20,7 +28,7 @@ Source0:	http://roaraudio.keep-cool.org/dl/%{name}-%{version}%{subver}.tar.gz
 # Source0-md5:	001e5d9ecc65d80e14486d5157eb5d42
 %{?with_arts:BuildRequires:	arts-devel}
 #BuildRequires:	celt-devel >= %{celt_release}
-BuildRequires:	esound-devel
+%{?with_esd:BuildRequires:	esound-devel}
 BuildRequires:	libao-devel
 BuildRequires:	libdnet-devel
 BuildRequires:	libfishsound-devel
@@ -29,7 +37,7 @@ BuildRequires:	liboggz-devel
 BuildRequires:	libsamplerate-devel
 BuildRequires:	libshout-devel
 #BuildRequires:	libslp-dev
-BuildRequires:	libsndfile-devel
+%{?with_sndfile:BuildRequires:	libsndfile-devel}
 BuildRequires:	libvorbis-devel
 BuildRequires:	openssl-devel
 BuildRequires:	pkgconfig
@@ -121,19 +129,37 @@ Requires:	%{name} = %{version}-%{release}
 This package contains the NAS compatibility system for the RoarAudio
 sound system.
 
-%package compat-pulse
+%package compat-pulseaudio
 Summary:	RoarAudio sound system compatibility system for PulseAudio
 Group:		Libraries
 Requires:	%{name} = %{version}-%{release}
 
-%description compat-pulse
+%description compat-pulseaudio
 This package contains the PulseAudio compatibility system for the
+RoarAudio sound system.
+
+%package compat-sndfile
+Summary:	RoarAudio sound system compatibility system for sndfile
+Group:		Libraries
+Requires:	%{name} = %{version}-%{release}
+
+%description compat-sndfile
+This package contains the sndfile compatibility system for the
 RoarAudio sound system.
 
 %prep
 %setup -q -n %{name}-%{version}%{subver}
 
 find -name Makefile | xargs grep -l -- '-g -Wall -O2' | xargs sed -i -e 's,-g -Wall -O2,%{rpmcflags},'
+
+sed -i -e '
+	%{!?with_alsa:/libroarartsc.so/d}
+	%{!?with_esd:/libroaresd.so/d}
+	%{!?with_pulseaudio:/libroarpulse.so/d}
+	%{!?with_sndfile:/libroarsndio.so/d}
+	%{!?with_yiff:/libroaryiff.so/d}
+	%{!?with_oss:/libroaross.so/d}
+' symlinks.comp
 
 %build
 # NOTE: not autoconf derivered configure
@@ -142,34 +168,34 @@ find -name Makefile | xargs grep -l -- '-g -Wall -O2' | xargs sed -i -e 's,-g -W
 	--prefix %{_prefix} \
 	--prefix-lib %{_libdir} \
 	--prefix-comp-bins %{_bindir} \
+	--prefix-comp-libs %{_libdir} \
+	%{!?with_arts:--no-artsc} \
 	--runtime-detect \
 	--cdrom /dev/cdrom \
 	--tty /dev/tty \
 	--oss-dev /dev/dsp
 
-%{__make}
+%{__make} \
+	%{!?with_esd:TARGETS_ESD=} \
+	%{!?with_arts:TARGETS_ARTS=} \
+	%{!?with_nas:TARGETS_NAS=} \
+	%{!?with_yiff:TARGETS_YIFF=} \
+	%{!?with_pulseaudio:TARGETS_PA=}
 
 %install
 rm -rf $RPM_BUILD_ROOT
 %{__make} install \
 	DESTDIR=$RPM_BUILD_ROOT
 
-%{__make} install DESTDIR=$RPM_BUILD_ROOT
-
-# cleanup wrong libs and fix complibs links
-rm -f $RPM_BUILD_ROOT%{_libdir}/%{name}/complibs/*
+# created by ldconfig
 rm -f $RPM_BUILD_ROOT%{_libdir}/lib*.so.0.3
 
-# roarify links
-ln -s ../../libroaresd.so $RPM_BUILD_ROOT%{_libdir}/%{name}/complibs/libesd.so.0
-ln -s libesd.so.0 $RPM_BUILD_ROOT%{_libdir}/%{name}/complibs/libesd.so
-ln -s ../../libroarartsc.so $RPM_BUILD_ROOT%{_libdir}/%{name}/complibs/libartsc.so.0
-ln -s libartsc.so.0 $RPM_BUILD_ROOT%{_libdir}/%{name}/complibs/libartsc.so
-# compat links
-ln -s libroaresd.so $RPM_BUILD_ROOT%{_libdir}/libesd.so.0
-ln -s libesd.so.0 $RPM_BUILD_ROOT%{_libdir}/libesd.so
-ln -s libroarartsc.so $RPM_BUILD_ROOT%{_libdir}/libartsc.so.0
-ln -s libartsc.so.0 $RPM_BUILD_ROOT%{_libdir}/libartsc.so
+# make symlinks relative
+for lib in $RPM_BUILD_ROOT%{_libdir}/lib*.so*; do
+	[ -L $lib ] || continue
+	target=$(readlink -f $lib)
+	ln -snf $(basename $target) $lib
+done
 
 # remove non header files
 rm -vf $RPM_BUILD_ROOT%{_includedir}/*/*.h.*
@@ -223,10 +249,7 @@ rm -rf $RPM_BUILD_ROOT
 %{_mandir}/man7/*.7*
 %{_libdir}/libroar.so
 %{_libdir}/libroareio.so
-%{_libdir}/libroaresd.so
 %{_libdir}/libroarlight.so
-%{_libdir}/libroarsndio.so
-%{_libdir}/%{name}
 
 %attr(755,root,root) %{_bindir}/roarfish
 %attr(755,root,root) %{_bindir}/yiff
@@ -238,8 +261,6 @@ rm -rf $RPM_BUILD_ROOT
 %attr(755,root,root) %{_libdir}/libroardsp.so.*.*.*
 %attr(755,root,root) %ghost %{_libdir}/libroareio.so.0
 %attr(755,root,root) %{_libdir}/libroareio.so.*.*.*
-%attr(755,root,root) %ghost %{_libdir}/libroaresd.so.0
-%attr(755,root,root) %{_libdir}/libroaresd.so.*.*.*
 %attr(755,root,root) %ghost %{_libdir}/libroarlight.so.0
 %attr(755,root,root) %{_libdir}/libroarlight.so.*.*.*
 %attr(755,root,root) %ghost %{_libdir}/libroarmidi.so.0
@@ -247,11 +268,6 @@ rm -rf $RPM_BUILD_ROOT
 %attr(755,root,root) %{_libdir}/libroaross.so
 %attr(755,root,root) %ghost %{_libdir}/libroaross.so.0
 %attr(755,root,root) %{_libdir}/libroaross.so.*.*.*
-%attr(755,root,root) %{_libdir}/libroarpulse.so
-%attr(755,root,root) %ghost %{_libdir}/libroarpulse.so.0
-%attr(755,root,root) %{_libdir}/libroarpulse.so.*.*.*
-%attr(755,root,root) %ghost %{_libdir}/libroarsndio.so.0
-%attr(755,root,root) %{_libdir}/libroarsndio.so.*.*.*
 %{_mandir}/man1/roarfish.1*
 %{_mandir}/man1/roarmonhttp.1*
 
@@ -306,8 +322,16 @@ rm -rf $RPM_BUILD_ROOT
 %attr(755,root,root) %{_bindir}/esdfilt
 %attr(755,root,root) %{_bindir}/esdmon
 %attr(755,root,root) %{_bindir}/esdplay
-%attr(755,root,root) %{_libdir}/libesd.so
+%attr(755,root,root) %ghost %{_libdir}/libroaresd.so.0
+%attr(755,root,root) %{_libdir}/libroaresd.so.*.*.*
+
+# compat libs pointing to libroaresd
 %attr(755,root,root) %{_libdir}/libesd.so.0
+# needed?
+%attr(755,root,root) %{_libdir}/libroaresd.so
+%attr(755,root,root) %{_libdir}/libesd.so
+%attr(755,root,root) %{_libdir}/libesd.so.0.2
+%attr(755,root,root) %{_libdir}/libesd.so.0.2.36
 
 %if %{with arts}
 %files compat-arts
@@ -316,15 +340,41 @@ rm -rf $RPM_BUILD_ROOT
 %attr(755,root,root) %{_bindir}/artsd
 %attr(755,root,root) %{_bindir}/artsplay
 %attr(755,root,root) %{_libdir}/libroarartsc.so
-%attr(755,root,root) %{_libdir}/libartsc.so
+# compat libs pointing to libroarpulse
 %attr(755,root,root) %{_libdir}/libartsc.so.0
+# needed?
+%attr(755,root,root) %{_libdir}/libartsc.so
+%attr(755,root,root) %{_libdir}/libartsc.so.0.0
+%attr(755,root,root) %{_libdir}/libartsc.so.0.0.0
 %endif
 
 %files compat-nas
 %defattr(644,root,root,755)
 %attr(755,root,root) %{_bindir}/auplay
 
-%files compat-pulse
+%files compat-pulseaudio
 %defattr(644,root,root,755)
 %attr(755,root,root) %{_bindir}/pacat
 %attr(755,root,root) %{_bindir}/paplay
+%attr(755,root,root) %{_libdir}/libroarpulse.so
+%attr(755,root,root) %ghost %{_libdir}/libroarpulse.so.0
+%attr(755,root,root) %{_libdir}/libroarpulse.so.*.*.*
+# compat libs pointing to libroarpulse
+%attr(755,root,root) %{_libdir}/libpulse-simple.so.0
+%attr(755,root,root) %{_libdir}/libpulse.so.0
+# needed?
+%attr(755,root,root) %{_libdir}/libpulse-simple.so
+%attr(755,root,root) %{_libdir}/libpulse-simple.so.0.0
+%attr(755,root,root) %{_libdir}/libpulse-simple.so.0.0.0
+%attr(755,root,root) %{_libdir}/libpulse-simple.so.0.0.1
+%attr(755,root,root) %{_libdir}/libpulse.so
+%attr(755,root,root) %{_libdir}/libpulse.so.0.1
+%attr(755,root,root) %{_libdir}/libpulse.so.0.1.0
+%attr(755,root,root) %{_libdir}/libpulse.so.0.4
+%attr(755,root,root) %{_libdir}/libpulse.so.0.4.1
+
+%files compat-sndfile
+%defattr(644,root,root,755)
+%attr(755,root,root) %{_libdir}/libroarsndio.so
+%attr(755,root,root) %ghost %{_libdir}/libroarsndio.so.0
+%attr(755,root,root) %{_libdir}/libroarsndio.so.*.*.*
