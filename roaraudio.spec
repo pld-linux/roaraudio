@@ -5,6 +5,7 @@
 # - figure out which are drivers and which are compat
 # - drop all the compat stuff?
 # - roarmonhttp as subpackage (cgi/inetd server)
+# - -ldnet it searches is for DEC Networking, not our libdnet
 #
 # Conditional build:
 %bcond_with		arts        # with arts audio output
@@ -17,7 +18,7 @@
 %bcond_without	audacious	# without audacious player support module
 
 # celt version required for roaraudio
-%define celt_release 0.6.1
+%define		celt_version 0.7.1
 
 %define		subver	beta4
 %define		rel		0.1
@@ -32,10 +33,9 @@ Source0:	http://roaraudio.keep-cool.org/dl/%{name}-%{version}%{subver}.tar.gz
 # Source0-md5:	001e5d9ecc65d80e14486d5157eb5d42
 %{?with_arts:BuildRequires:	arts-devel}
 %{?with_audacious:BuildRequires: audacious-devel}
-BuildRequires:	celt-devel >= %{celt_release}
+BuildRequires:	celt-devel >= %{celt_version}
 %{?with_esd:BuildRequires:	esound-devel}
 BuildRequires:	libao-devel
-BuildRequires:	libdnet-devel
 BuildRequires:	libfishsound-devel
 %{?with_fishsound:BuildRequires:	libfishsound-devel}
 BuildRequires:	libogg-devel
@@ -62,7 +62,7 @@ clients because of it's full network transparency.
 %package -n libroar
 Summary:	RoarAudio sound system shared libraries
 Group:		Libraries
-Requires:	celt >= %{celt_release}
+Requires:	celt >= %{celt_version}
 
 %description -n libroar
 This package contains the shared libraries for the RoarAudio sound
@@ -81,7 +81,7 @@ develop applications that use the RoarAudio sound system.
 Summary:	RoarAudio sound system server daemon
 Group:		Daemons
 # roaraudio may call binaries which should be installed
-Requires:	celt >= %{celt_release}
+Requires:	celt >= %{celt_version}
 Requires:	flac
 Requires:	vorbis-tools
 
@@ -93,7 +93,7 @@ RoarAudio sound system.
 Summary:	RoarAudio sound system utilities
 Group:		Applications/Multimedia
 # roaraudio may call binaries which should be installed
-Requires:	celt >= %{celt_release}
+Requires:	celt >= %{celt_version}
 Requires:	gnuplot
 
 %description utils
