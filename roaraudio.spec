@@ -189,6 +189,8 @@ sound system.
 
 find -name Makefile | xargs grep -l -- '-g -Wall -O2' | xargs sed -i -e 's,-g -Wall -O2,%{rpmcflags},'
 
+sed -i -e 's,unknown,%{version},' roarclients/roar-config.c
+
 sed -i -e '
 	%{!?with_alsa:/libroarartsc.so/d}
 	%{!?with_esd:/libroaresd.so/d}
