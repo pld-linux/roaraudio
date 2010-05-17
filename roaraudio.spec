@@ -43,12 +43,15 @@ BuildRequires:	liboggz-devel
 BuildRequires:	libsamplerate-devel
 BuildRequires:	libshout-devel
 %{?with_sndfile:BuildRequires:	libsndfile-devel}
+BuildRequires:	libuuid-devel
 BuildRequires:	libvorbis-devel
 BuildRequires:	openslp-devel
 BuildRequires:	openssl-devel
 BuildRequires:	pkgconfig
+%{?with_pulseaudio:BuildRequires:	pulseaudio-devel}
 BuildRequires:	sed >= 4.0
 BuildRequires:	speex-devel >= 1:1.2
+BuildRequires:	which
 %{?with_xmms:BuildRequires:	xmms-devel}
 %{?with_yiff:BuildRequires:	yiff-devel}
 BuildRoot:	%{tmpdir}/%{name}-%{version}-root-%(id -u -n)
@@ -199,6 +202,8 @@ sed -i -e '
 	%{!?with_yiff:/libroaryiff.so/d}
 	%{!?with_oss:/libroaross.so/d}
 ' symlinks.comp
+
+sed -i -e '/ROAR_HAVE_LIBCELT/s/\<celt\>/celt0/' configure
 
 %build
 # NOTE: not autoconf derivered configure
