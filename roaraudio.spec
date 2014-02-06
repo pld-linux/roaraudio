@@ -8,14 +8,14 @@
 # - -ldnet it searches is for DEC Networking, not our libdnet
 #
 # Conditional build:
-%bcond_with		arts        # with arts audio output
-%bcond_without	esd     	# disable EsounD sound support
-%bcond_without	nas     	# without NAS audio output
-%bcond_without	pulseaudio  # without pulseaudio output
-%bcond_without	sndfile		# without sndfile output
-%bcond_without	yiff		# without YIFF sound server support
-%bcond_without	xmms		# don't build XMMS plugin
-%bcond_without	audacious	# without audacious player support module
+%bcond_with	arts		# aRts audio output
+%bcond_without	esd		# EsounD sound support
+%bcond_without	nas		# NAS audio output
+%bcond_without	pulseaudio	# pulseaudio output
+%bcond_without	sndfile		# sndfile output
+%bcond_without	yiff		# YIFF sound server support
+%bcond_without	xmms		# XMMS plugin
+%bcond_without	audacious	# audacious player support module
 
 # celt version required for roaraudio
 %define		celt_version 0.7.1
@@ -23,14 +23,15 @@
 %define		subver	beta4
 %define		rel		0.1
 Summary:	RoarAudio is a cross-platform sound system for both, home and professional use
+Summary(pl.UTF-8):	RoarAudio - wieloplatformowy system dźwięku do użytku domowego i profesjonalnego
 Name:		roaraudio
 Version:	0.3
 Release:	0.%{subver}.%{rel}
 License:	GPL v3, LGPL v3
 Group:		Libraries
-URL:		http://roaraudio.keep-cool.org/
 Source0:	http://roaraudio.keep-cool.org/dl/%{name}-%{version}%{subver}.tar.gz
 # Source0-md5:	001e5d9ecc65d80e14486d5157eb5d42
+URL:		http://roaraudio.keep-cool.org/
 %{?with_arts:BuildRequires:	arts-devel}
 %{?with_audacious:BuildRequires: audacious-devel}
 BuildRequires:	celt-devel >= %{celt_version}
@@ -62,8 +63,15 @@ audio from different clients before sending it to it's outputs. Those
 outputs may for example be soundcards. It also supports network
 clients because of it's full network transparency.
 
+%description -l pl.UTF-8
+RoarAudio to serwer do miksowania dźwięku. Jego głównym celem jest
+miksowanie dźwięku od różnych klientów przed przesłaniem go do wyjść.
+Wyjścia mogą być na przykład kartami dźwiękowymi. Obsługiwani są także
+klienci sieciowi, ponieważ serwer jest w pełni przezroczysty sieciowo.
+
 %package -n libroar
 Summary:	RoarAudio sound system shared libraries
+Summary(pl.UTF-8):	Biblioteki współdzielone systemu dźwięku RoarAudio
 Group:		Libraries
 Requires:	celt >= %{celt_version}
 
@@ -71,17 +79,25 @@ Requires:	celt >= %{celt_version}
 This package contains the shared libraries for the RoarAudio sound
 system.
 
+%description -n libroar -l pl.UTF-8
+Ten pakiet zawiera biblioteki współdzielone systemu dźwięku RoarAudio.
+
 %package -n libroar-devel
-Summary:	RoarAudio sound system header files and libraries
+Summary:	RoarAudio sound system header files
 Group:		Development/Libraries
 Requires:	libroar = %{version}-%{release}
 
 %description -n libroar-devel
-This package contains static libraries and header files needed to
-develop applications that use the RoarAudio sound system.
+This package contains the header files needed to develop applications
+that use the RoarAudio sound system.
+
+%description -n libroar-devel -l pl.UTF-8
+Ten pakiet zawiera pliki nagłówkowe niezbędne do tworzenia aplikacji
+wykorzystujących system dźwięku RoarAudio.
 
 %package server
 Summary:	RoarAudio sound system server daemon
+Summary(pl.UTF-8):	Demon serwera systemu dźwięku RoarAudio
 Group:		Daemons
 # roaraudio may call binaries which should be installed
 Requires:	celt >= %{celt_version}
@@ -92,8 +108,13 @@ Requires:	vorbis-tools
 This package contains the server daemon and related files for the
 RoarAudio sound system.
 
+%description server -l pl.UTF-8
+Ten pakiet zawiera demona serwera oraz związane z nim pliki dla
+systemu dźwięku RoarAudio.
+
 %package utils
 Summary:	RoarAudio sound system utilities
+Summary(pl.UTF-8):	Narzędzia dla systemu dźwięku RoarAudio
 Group:		Applications/Multimedia
 # roaraudio may call binaries which should be installed
 Requires:	celt >= %{celt_version}
@@ -103,28 +124,97 @@ Requires:	gnuplot
 This package contains command line utilities for the RoarAudio sound
 system.
 
-%package -n xmms-output-roar
-Summary:	RoarAudio sound system plugin for the XMMS
+%description utils -l pl.UTF-8
+Ten pakiet zawiera narzędzia linii poleceń dla systemu dźwięku
+RoarAudio.
+
+%package compat-esound
+Summary:	RoarAudio sound system compatibility system for EsounD
+Summary(pl.UTF-8):	Warstwa zgodności systemu dźwięku RoarAudio dla systemu EsounD
 Group:		Libraries
 Requires:	%{name} = %{version}-%{release}
-Requires:	libao
 
-%description -n xmms-output-roar
-This package contains the XMMS sound system plugin for the Audio
-Output Library.
+%description compat-esound
+This package contains the EsounD compatibility system for the
+RoarAudio sound system.
 
-%package -n audacious-output-roar
-Summary:	RoarAudio sound system plugin for the Audacious Media Player
+%description compat-esound -l pl.UTF-8
+Ten pakiet zawiera warstwę zgodności systemu dźwięku RoarAudio dla
+systemu EsounD.
+
+%package compat-arts
+Summary:	RoarAudio sound system compatibility system for aRts
+Summary(pl.UTF-8):	Warstwa zgodności systemu dźwięku RoarAudio dla systemu aRts
 Group:		Libraries
 Requires:	%{name} = %{version}-%{release}
-Requires:	libao
 
-%description -n audacious-output-roar
-This package contains the Audacious Media Player sound system plugin
-for the Audio Output Library.
+%description compat-arts
+This package contains the aRts compatibility system for the RoarAudio
+sound system.
+
+%description compat-arts -l pl.UTF-8
+Ten pakiet zawiera warstwę zgodności systemu dźwięku RoarAudio dla
+systemu aRts.
+
+%package compat-nas
+Summary:	RoarAudio sound system compatibility system for NAS
+Summary(pl.UTF-8):	Warstwa zgodności systemu dźwięku RoarAudio dla systemu NAS
+Group:		Libraries
+Requires:	%{name} = %{version}-%{release}
+
+%description compat-nas
+This package contains the NAS compatibility system for the RoarAudio
+sound system.
+
+%description compat-nas -l pl.UTF-8
+Ten pakiet zawiera warstwę zgodności systemu dźwięku RoarAudio dla
+systemu NAS.
+
+%package compat-pulseaudio
+Summary:	RoarAudio sound system compatibility system for PulseAudio
+Summary(pl.UTF-8):	Warstwa zgodności systemu dźwięku RoarAudio dla systemu PulseAudio
+Group:		Libraries
+Requires:	%{name} = %{version}-%{release}
+
+%description compat-pulseaudio
+This package contains the PulseAudio compatibility system for the
+RoarAudio sound system.
+
+%description compat-pulseaudio -l pl.UTF-8
+Ten pakiet zawiera warstwę zgodności systemu dźwięku RoarAudio dla
+systemu PulseAudio.
+
+%package compat-sndfile
+Summary:	RoarAudio sound system compatibility system for sndfile
+Summary(pl.UTF-8):	Warstwa zgodności systemu dźwięku RoarAudio dla sndfile
+Group:		Libraries
+Requires:	%{name} = %{version}-%{release}
+
+%description compat-sndfile
+This package contains the sndfile compatibility system for the
+RoarAudio sound system.
+
+%description compat-sndfile -l pl.UTF-8
+Ten pakiet zawiera warstwę zgodności systemu dźwięku RoarAudio dla
+sndfile.
+
+%package compat-yiff
+Summary:	RoarAudio sound system compatibility system for YIFF
+Summary(pl.UTF-8):	Warstwa zgodności systemu dźwięku RoarAudio dla systemu YIFF
+Group:		Libraries
+Requires:	%{name} = %{version}-%{release}
+
+%description compat-yiff
+This package contains the YIFF compatibility system for the RoarAudio
+sound system.
+
+%description compat-yiff -l pl.UTF-8
+Ten pakiet zawiera warstwę zgodności systemu dźwięku RoarAudio dla
+systemu YIFF.
 
 %package -n libao-roar
 Summary:	RoarAudio sound system plugin for the Audio Output Library
+Summary(pl.UTF-8):	Wtyczka systemu dźwięku RoarAudio dla biblioteki Audio Output
 Group:		Libraries
 Requires:	%{name} = %{version}-%{release}
 Requires:	libao
@@ -133,64 +223,43 @@ Requires:	libao
 This package contains the RoarAudio sound system plugin for the Audio
 Output Library.
 
-%package compat-esound
-Summary:	RoarAudio sound system compatibility system for EsounD
+%description -n libao-roar -l pl.UTF-8
+Ten pakiet zawiera wtyczkę systemu dźwięku RoarAudio dla biblioteki
+Audio Output.
+
+%package -n xmms-output-roar
+Summary:	RoarAudio sound system plugin for XMMS
+Summary(pl.UTF-8):	Wtyczka systemu dźwięku RoarAudio dla odtwarzacza XMMS
 Group:		Libraries
 Requires:	%{name} = %{version}-%{release}
+Requires:	xmms
 
-%description compat-esound
-This package contains the EsounD compatibility system for the
-RoarAudio sound system.
+%description -n xmms-output-roar
+This package contains the RoarAudio sound system plugin for XMMS.
 
-%package compat-arts
-Summary:	RoarAudio sound system compatibility system for aRts
+%description -n xmms-output-roar -l pl.UTF-8
+Ten pakiet zawiera wtyczkę systemu dźwięku RoarAudio dla odtwarzacza
+XMMS.
+
+%package -n audacious-output-roar
+Summary:	RoarAudio sound system plugin for the Audacious Media Player
+Summary(pl.UTF-8):	Wtyczka systemu dźwięku RoarAudio dla odtwarzacza Audacious Media Player
 Group:		Libraries
 Requires:	%{name} = %{version}-%{release}
+Requires:	libao
 
-%description compat-arts
-This package contains the aRts compatibility system for the RoarAudio
-sound system.
+%description -n audacious-output-roar
+This package contains the Audacious Media Player sound system plugin
+for the Audacious Media Player.
 
-%package compat-nas
-Summary:	RoarAudio sound system compatibility system for NAS
-Group:		Libraries
-Requires:	%{name} = %{version}-%{release}
-
-%description compat-nas
-This package contains the NAS compatibility system for the RoarAudio
-sound system.
-
-%package compat-pulseaudio
-Summary:	RoarAudio sound system compatibility system for PulseAudio
-Group:		Libraries
-Requires:	%{name} = %{version}-%{release}
-
-%description compat-pulseaudio
-This package contains the PulseAudio compatibility system for the
-RoarAudio sound system.
-
-%package compat-sndfile
-Summary:	RoarAudio sound system compatibility system for sndfile
-Group:		Libraries
-Requires:	%{name} = %{version}-%{release}
-
-%description compat-sndfile
-This package contains the sndfile compatibility system for the
-RoarAudio sound system.
-
-%package compat-yiff
-Summary:	RoarAudio sound system compatibility system for YIFF
-Group:		Libraries
-Requires:	%{name} = %{version}-%{release}
-
-%description compat-yiff
-This package contains the YIFF compatibility system for the RoarAudio
-sound system.
+%description -n audacious-output-roar -l pl.UTF-8
+Ten pakiet zawiera wtyczkę systemu dźwięku RoarAudio dla odtwarzacza
+Audacious Media Player.
 
 %prep
 %setup -q -n %{name}-%{version}%{subver}
 
-find -name Makefile | xargs grep -l -- '-g -Wall -O2' | xargs sed -i -e 's,-g -Wall -O2,%{rpmcflags},'
+find -name Makefile | xargs grep -l -- '-g -Wall -O2' | xargs sed -i -e 's@-g -Wall -O2@%{rpmcflags}@'
 
 sed -i -e 's,unknown,%{version},' roarclients/roar-config.c
 
@@ -234,7 +303,7 @@ rm -rf $RPM_BUILD_ROOT
 	DESTDIR=$RPM_BUILD_ROOT
 
 # created by ldconfig
-rm -f $RPM_BUILD_ROOT%{_libdir}/lib*.so.0.3
+#rm -f $RPM_BUILD_ROOT%{_libdir}/lib*.so.0.3
 
 # make symlinks relative
 for lib in $RPM_BUILD_ROOT%{_libdir}/lib*.so*; do
@@ -244,7 +313,7 @@ for lib in $RPM_BUILD_ROOT%{_libdir}/lib*.so*; do
 done
 
 # remove non header files
-rm -vf $RPM_BUILD_ROOT%{_includedir}/*/*.h.*
+%{__rm} -v $RPM_BUILD_ROOT%{_includedir}/*/*.h.*
 
 %clean
 rm -rf $RPM_BUILD_ROOT
@@ -299,26 +368,31 @@ rm -rf $RPM_BUILD_ROOT
 %{_mandir}/man1/roarvorbis.1*
 %{_mandir}/man7/*.7*
 
-%attr(755,root,root) %{_libdir}/libroaross.so
-%attr(755,root,root) %ghost %{_libdir}/libroaross.so.0
 %attr(755,root,root) %{_libdir}/libroaross.so.*.*.*
+%attr(755,root,root) %ghost %{_libdir}/libroaross.so.0
+%attr(755,root,root) %{_libdir}/libroaross.so
 
 %files -n libroar
 %defattr(644,root,root,755)
-%attr(755,root,root) %ghost %{_libdir}/libroar.so.0
 %attr(755,root,root) %{_libdir}/libroar.so.*.*.*
-%attr(755,root,root) %ghost %{_libdir}/libroardsp.so.0
+%attr(755,root,root) %ghost %{_libdir}/libroar.so.0
 %attr(755,root,root) %{_libdir}/libroardsp.so.*.*.*
-%attr(755,root,root) %ghost %{_libdir}/libroarmidi.so.0
+%attr(755,root,root) %ghost %{_libdir}/libroardsp.so.0
 %attr(755,root,root) %{_libdir}/libroarmidi.so.*.*.*
-%attr(755,root,root) %ghost %{_libdir}/libroarlight.so.0
+%attr(755,root,root) %ghost %{_libdir}/libroarmidi.so.0
 %attr(755,root,root) %{_libdir}/libroarlight.so.*.*.*
-%attr(755,root,root) %ghost %{_libdir}/libroareio.so.0
+%attr(755,root,root) %ghost %{_libdir}/libroarlight.so.0
 %attr(755,root,root) %{_libdir}/libroareio.so.*.*.*
+%attr(755,root,root) %ghost %{_libdir}/libroareio.so.0
 
 %files -n libroar-devel
 %defattr(644,root,root,755)
 %attr(755,root,root) %{_bindir}/roar-config
+%attr(755,root,root) %{_libdir}/libroar.so
+%attr(755,root,root) %{_libdir}/libroardsp.so
+%attr(755,root,root) %{_libdir}/libroarmidi.so
+%attr(755,root,root) %{_libdir}/libroarlight.so
+%attr(755,root,root) %{_libdir}/libroareio.so
 %{_includedir}/libroar
 %{_includedir}/libroardsp
 %{_includedir}/libroareio
@@ -332,11 +406,6 @@ rm -rf $RPM_BUILD_ROOT
 %{_includedir}/roaraudio
 %{_mandir}/man1/roar-config.1*
 %{_mandir}/man3/*.3*
-%{_libdir}/libroar.so
-%{_libdir}/libroardsp.so
-%{_libdir}/libroarmidi.so
-%{_libdir}/libroarlight.so
-%{_libdir}/libroareio.so
 
 %files server
 %defattr(644,root,root,755)
@@ -356,18 +425,6 @@ rm -rf $RPM_BUILD_ROOT
 %{_mandir}/man1/roarsin.1*
 %{_mandir}/man1/roarvumeter.1*
 
-%if %{with audacious}
-%files -n audacious-output-roar
-%defattr(644,root,root,755)
-%{_libdir}/audacious/Output/libroar.so
-%endif
-
-%if %{with xmms}
-%files -n xmms-output-roar
-%defattr(644,root,root,755)
-%attr(755,root,root) %{xmms_output_plugindir}/libroar.so
-%endif
-
 %if %{with esd}
 %files compat-esound
 %defattr(644,root,root,755)
@@ -376,8 +433,8 @@ rm -rf $RPM_BUILD_ROOT
 %attr(755,root,root) %{_bindir}/esdfilt
 %attr(755,root,root) %{_bindir}/esdmon
 %attr(755,root,root) %{_bindir}/esdplay
-%attr(755,root,root) %ghost %{_libdir}/libroaresd.so.0
 %attr(755,root,root) %{_libdir}/libroaresd.so.*.*.*
+%attr(755,root,root) %ghost %{_libdir}/libroaresd.so.0
 
 # compat libs pointing to libroaresd
 %attr(755,root,root) %{_libdir}/libesd.so.0
@@ -453,4 +510,16 @@ rm -rf $RPM_BUILD_ROOT
 # needed?
 %attr(755,root,root) %{_libdir}/libY2.so
 %attr(755,root,root) %{_libdir}/libroaryiff.so
+%endif
+
+%if %{with xmms}
+%files -n xmms-output-roar
+%defattr(644,root,root,755)
+%attr(755,root,root) %{xmms_output_plugindir}/libroar.so
+%endif
+
+%if %{with audacious}
+%files -n audacious-output-roar
+%defattr(644,root,root,755)
+%{_libdir}/audacious/Output/libroar.so
 %endif
