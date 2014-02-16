@@ -1,0 +1,188 @@
+--- roaraudio-0.4/include/roaraudio.h.orig	2011-10-22 14:17:16.000000000 +0200
++++ roaraudio-0.4/include/roaraudio.h	2014-02-07 19:09:15.346745999 +0100
+@@ -29,7 +29,7 @@
+ #ifndef _ROARAUDIO_H_
+ #define _ROARAUDIO_H_
+ 
+-#define  _ROAR_MKVERSION(a,b,c) (((uint32_t)(a) << 16) + ((uint32_t)(b) << 8) + (uint32_t)(c))
++#define  _ROAR_MKVERSION(a,b,c) (((a) << 16) + ((b) << 8) + (c))
+ 
+ #include <roaraudio/config.h>
+ #include <roaraudio/compilerhacks.h>
+--- roaraudio-0.4/libroardsp/transcode_celt.c.orig	2011-01-08 17:05:39.000000000 +0100
++++ roaraudio-0.4/libroardsp/transcode_celt.c	2014-02-07 20:13:40.729917120 +0100
+@@ -30,7 +30,14 @@
+ #define _16BIT (16/8)
+ #define _SIZE_LEN 2
+ 
+-#ifdef ROAR_HAVE_CELT_VERSION_0_7_1
++#if (ROAR_HAVE_CELT_VERSION) >= _ROAR_MKVERSION(0,7,0)
++#define ROAR_HAVE_CELT_0_7
++#endif
++#if (ROAR_HAVE_CELT_VERSION) >= _ROAR_MKVERSION(0,8,0)
++#define ROAR_HAVE_CELT_0_8
++#endif
++
++#ifdef ROAR_HAVE_CELT_0_7
+ typedef celt_int16 celt_int16_t;
+ #endif
+ 
+@@ -61,7 +68,7 @@ int roar_xcoder_celt_init       (struct
+   return -1;
+  }
+ 
+-#ifdef ROAR_HAVE_CELT_VERSION_0_7_1
++#ifdef ROAR_HAVE_CELT_0_7
+  self->mode                 = celt_mode_create(info->rate, self->frame_size, NULL);
+ #else
+  self->mode                 = celt_mode_create(info->rate, info->channels, self->frame_size, NULL);
+@@ -74,8 +81,8 @@ int roar_xcoder_celt_init       (struct
+  }
+ 
+  if (state->encode) {
+-#ifdef ROAR_HAVE_CELT_VERSION_0_7_1
+-  self->encoder = celt_encoder_create(self->mode, info->channels, NULL);
++#ifdef ROAR_HAVE_CELT_0_7
++  self->encoder = celt_encoder_create_custom(self->mode, info->channels, NULL);
+ #else
+   self->encoder = celt_encoder_create(self->mode);
+ #endif
+@@ -84,8 +91,8 @@ int roar_xcoder_celt_init       (struct
+    return -1;
+   }
+  } else {
+-#ifdef ROAR_HAVE_CELT_VERSION_0_7_1
+-  self->decoder = celt_decoder_create(self->mode, info->channels, NULL);
++#ifdef ROAR_HAVE_CELT_0_7
++  self->decoder = celt_decoder_create_custom(self->mode, info->channels, NULL);
+ #else
+   self->decoder = celt_decoder_create(self->mode);
+ #endif
+@@ -151,7 +158,11 @@ int roar_xcoder_celt_encode     (struct
+   ROAR_DBG("roar_xcoder_celt_encode(*): Wrote MAGIC");
+  }
+ 
++#ifdef ROAR_HAVE_CELT_0_8
++ pkglen  = celt_encode(self->encoder, (celt_int16_t *) buf, self->frame_size, cp, self->bufferlen - _SIZE_LEN);
++#else
+  pkglen  = celt_encode(self->encoder, (celt_int16_t *) buf, NULL, cp, self->bufferlen - _SIZE_LEN);
++#endif
+  *lenp   = ROAR_HOST2NET16(pkglen);
+ 
+  if ( roar_vio_write(state->backend, self->iobuffer, pkglen+2) == -1 )
+@@ -194,7 +205,11 @@ int roar_xcoder_celt_decode     (struct
+  if ( roar_vio_read(state->backend, cp, pkglen) != pkglen )
+   return -1;
+ 
++#ifdef ROAR_HAVE_CELT_0_8
++ if ( celt_decode(self->decoder, cp, pkglen, (celt_int16_t *) buf, self->frame_size) < 0 )
++#else
+  if ( celt_decode(self->decoder, cp, pkglen, (celt_int16_t *) buf) < 0 )
++#endif
+   return -1;
+ 
+  return 0;
+--- roaraudio-0.4/roard/codecfilter_celt.c.orig	2011-05-13 23:30:16.000000000 +0200
++++ roaraudio-0.4/roard/codecfilter_celt.c	2014-02-07 21:01:48.163129276 +0100
+@@ -26,7 +26,14 @@
+ #include "roard.h"
+ #ifdef ROAR_HAVE_LIBCELT
+ 
+-#ifdef ROAR_HAVE_CELT_VERSION_0_7_1
++#if (ROAR_HAVE_CELT_VERSION) >= _ROAR_MKVERSION(0,7,0)
++#define ROAR_HAVE_CELT_0_7
++#endif
++#if (ROAR_HAVE_CELT_VERSION) >= _ROAR_MKVERSION(0,8,0)
++#define ROAR_HAVE_CELT_0_8
++#endif
++
++#ifdef ROAR_HAVE_CELT_0_7
+ typedef celt_int16 celt_int16_t;
+ #endif
+ 
+@@ -85,7 +92,7 @@ int cf_celt_open(CODECFILTER_USERDATA_T
+   return -1;
+  }
+ 
+-#ifdef ROAR_HAVE_CELT_VERSION_0_7_1
++#ifdef ROAR_HAVE_CELT_0_7
+  self->mode                 = celt_mode_create(s->info.rate, self->frame_size, NULL);
+ #else
+  self->mode                 = celt_mode_create(s->info.rate, s->info.channels, self->frame_size, NULL);
+@@ -97,21 +104,21 @@ int cf_celt_open(CODECFILTER_USERDATA_T
+  }
+ 
+  if ( s->dir == ROAR_DIR_PLAY ) {
+-#ifdef ROAR_HAVE_CELT_VERSION_0_7_1
+-   self->decoder = celt_decoder_create(self->mode, s->info.channels, NULL);
++#ifdef ROAR_HAVE_CELT_0_7
++   self->decoder = celt_decoder_create_custom(self->mode, s->info.channels, NULL);
+ #else
+    self->decoder = celt_decoder_create(self->mode);
+ #endif
+  } else if ( s->dir == ROAR_DIR_MONITOR || s->dir == ROAR_DIR_OUTPUT ) {
+-#ifdef ROAR_HAVE_CELT_VERSION_0_7_1
+-   self->encoder = celt_encoder_create(self->mode, s->info.channels, NULL);
++#ifdef ROAR_HAVE_CELT_0_7
++   self->encoder = celt_encoder_create_custom(self->mode, s->info.channels, NULL);
+ #else
+    self->encoder = celt_encoder_create(self->mode);
+ #endif
+  } else if ( s->dir == ROAR_DIR_BIDIR ) {
+-#ifdef ROAR_HAVE_CELT_VERSION_0_7_1
+-   self->decoder = celt_decoder_create(self->mode, s->info.channels, NULL);
+-   self->encoder = celt_encoder_create(self->mode, s->info.channels, NULL);
++#ifdef ROAR_HAVE_CELT_0_7
++   self->decoder = celt_decoder_create_custom(self->mode, s->info.channels, NULL);
++   self->encoder = celt_encoder_create_custom(self->mode, s->info.channels, NULL);
+ #else
+    self->decoder = celt_decoder_create(self->mode);
+    self->encoder = celt_encoder_create(self->mode);
+@@ -204,7 +211,11 @@ int cf_celt_read(CODECFILTER_USERDATA_T
+   cbuf = buf + r;
+ 
+ //  printf("buf=%p, r=%i // cbuf=%p\n", buf, r, cbuf);
++#ifdef ROAR_HAVE_CELT_0_8
++  if ( celt_decode(self->decoder, (unsigned char *) self->ibuf, fs, (celt_int16_t *) cbuf, self->frame_size) < 0 )
++#else
+   if ( celt_decode(self->decoder, (unsigned char *) self->ibuf, fs, (celt_int16_t *) cbuf) < 0 )
++#endif
+    return -1;
+ 
+   r += self->s_buf;
+@@ -220,7 +231,11 @@ int cf_celt_read(CODECFILTER_USERDATA_T
+     return -1;
+    if ( stream_vio_s_read(self->stream, self->ibuf, fs) == fs ) {
+ //    printf("got data!\n");
++#ifdef ROAR_HAVE_CELT_0_8
++    if ( celt_decode(self->decoder, (unsigned char *) self->ibuf, fs, (celt_int16_t *) self->obuf, self->frame_size) >= 0 ) {
++#else
+     if ( celt_decode(self->decoder, (unsigned char *) self->ibuf, fs, (celt_int16_t *) self->obuf) >= 0 ) {
++#endif
+ //     printf("{ // decode rest\n");
+ //     printf(" r=%i // need %i Bytes\n", r, len - r);
+ //     printf(" memcpy(buf+%i, self->obuf, %i) = ?\n", r, len - r);
+@@ -280,7 +295,11 @@ int cf_celt_write(CODECFILTER_USERDATA_T
+   buf += diff;
+   len -= diff;
+ 
++#ifdef ROAR_HAVE_CELT_0_8
++  pkglen     = celt_encode(self->encoder, (celt_int16_t *) self->obuf, self->frame_size, cbits+2, BS);
++#else
+   pkglen     = celt_encode(self->encoder, (celt_int16_t *) self->obuf, NULL, cbits+2, BS);
++#endif
+   pkglen_net = ROAR_HOST2NET16(pkglen);
+   *(uint16_t*)cbits = pkglen_net;
+ 
+@@ -288,7 +307,11 @@ int cf_celt_write(CODECFILTER_USERDATA_T
+    return -1;
+ 
+   while (len >= fs2) {
++#ifdef ROAR_HAVE_CELT_0_8
++   pkglen     = celt_encode(self->encoder, (celt_int16_t *) buf, self->frame_size, cbits+2, BS);
++#else
+    pkglen     = celt_encode(self->encoder, (celt_int16_t *) buf, NULL, cbits+2, BS);
++#endif
+    pkglen_net = ROAR_HOST2NET16(pkglen);
+    *(uint16_t*)cbits = pkglen_net;
+ 

@@ -1,0 +1,42 @@
+--- roaraudio-0.4/configure.orig	2011-11-01 12:23:04.000000000 +0100
++++ roaraudio-0.4/configure	2014-02-08 16:02:00.663591608 +0100
+@@ -1514,7 +1514,7 @@
+ test_lib_defmake ROAR_HAVE_H_POLL        %            poll.h        c          -- poll.h
+ test_lib_defmake ROAR_HAVE_H_MMSYSTEM    %            mmsystem.h    c          -- windows.h mmsystem.h
+ test_lib_defmake ROAR_HAVE_H_ESD         libroaresd   esd.h         c          -- esd.h
+-test_lib_defmake ROAR_HAVE_H_ARTSC       libroararts  artsc.h       c          -- kde/artsc/artsc.h
++test_lib_defmake ROAR_HAVE_H_ARTSC       libroararts  artsc.h       c          -- artsc/artsc.h
+ test_lib_defmake ROAR_HAVE_H_ICONV       %            iconv.h       c          -- iconv.h
+ test_lib_defmake ROAR_HAVE_H_NETINET_IN  %            'netinet/in.h' c         -- 'netinet/in.h'
+ test_lib_defmake ROAR_HAVE_H_LINUX_REBOOT %            linux/reboot.h c        -- linux/reboot.h
+@@ -1559,7 +1559,7 @@
+ test_lib_defmake ROAR_HAVE_LIBPULSE      libroarpulse libpulse      pulse      -- pulse/pulseaudio.h pulse/simple.h
+ test_lib_defmake ROAR_HAVE_LIBPULSESIMPLE %           libpulse-simple pulse-simple -- pulse/simple.h
+ test_lib_defmake ROAR_HAVE_LIBY2         libroaryiff  libyiff       Y2         -- Y2/Y.h Y2/Ylib.h
+-test_lib_defmake ROAR_HAVE_LIBARTSC      %            libartsc      artsc      -- kde/artsc/artsc.h
++test_lib_defmake ROAR_HAVE_LIBARTSC      %            libartsc      artsc      -- artsc/artsc.h
+ test_lib_defmake ROAR_HAVE_LIBOSSAUDIO   %            libossaudio   ossaudio   -- sys/ioctl.h
+ test_lib_defmake ROAR_HAVE_LIBSNDIO      %            libsndio      sndio      -- sndio.h
+ test_lib_defmake ROAR_HAVE_LIBRSOUND     libroarrsound librsound    rsound     -- rsound.h
+--- roaraudio-0.4/libroararts/libartsc.c.orig	2011-04-28 20:47:34.000000000 +0200
++++ roaraudio-0.4/libroararts/libartsc.c	2014-02-08 16:10:56.106902472 +0100
+@@ -37,7 +37,7 @@
+  */
+ 
+ #include <roaraudio.h>
+-#include <kde/artsc/artsc.h>
++#include <artsc/artsc.h>
+ 
+ static struct roar_connection _libroarartsc_connection[1];
+ 
+--- roaraudio-0.4/roard/include/driver.h.orig	2011-05-26 12:57:17.000000000 +0200
++++ roaraudio-0.4/roard/include/driver.h	2014-02-08 16:18:46.640216058 +0100
+@@ -139,7 +139,7 @@
+ #endif
+ 
+ #ifdef ROAR_HAVE_LIBARTSC
+-#include <kde/artsc/artsc.h>
++#include <artsc/artsc.h>
+ #include "driver_artsc.h"
+ #endif
+ 

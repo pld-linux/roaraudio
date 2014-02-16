@@ -1,44 +1,58 @@
 # TODO
+# - RAUM (libraum, raum.h)
+# - libossaudio (OSS 4?)
+# - librsound (librsound, rsound.h)
+# - PABLIO (libpablio, pablio/pablio.h)
 # - see HACKING for packaging suggestions
 # - libroar/libroar-devel should be complete, rest needs more work
 # - figure out which libs go where
 # - figure out which are drivers and which are compat
 # - drop all the compat stuff?
 # - roarmonhttp as subpackage (cgi/inetd server)
+# NOTE:
 # - -ldnet it searches is for DEC Networking, not our libdnet
 #
 # Conditional build:
 %bcond_with	arts		# aRts audio output
 %bcond_without	esd		# EsounD sound support
 %bcond_without	nas		# NAS audio output
+%bcond_without	oss		# OSS compatibility layer
 %bcond_without	pulseaudio	# pulseaudio output
+%bcond_with	rsound		# rsound support
 %bcond_without	sndfile		# sndfile output
 %bcond_without	yiff		# YIFF sound server support
 %bcond_without	xmms		# XMMS plugin
-%bcond_without	audacious	# audacious player support module
+%bcond_with	audacious	# audacious player plugin [temporarily(?) removed from sources]
 
 # celt version required for roaraudio
-%define		celt_version 0.7.1
+%define		celt_ver 0.7.1
 
-%define		subver	beta4
-%define		rel		0.1
 Summary:	RoarAudio is a cross-platform sound system for both, home and professional use
 Summary(pl.UTF-8):	RoarAudio - wieloplatformowy system dźwięku do użytku domowego i profesjonalnego
 Name:		roaraudio
-Version:	0.3
-Release:	0.%{subver}.%{rel}
+Version:	0.4
+Release:	0.1
 License:	GPL v3, LGPL v3
 Group:		Libraries
-Source0:	http://roaraudio.keep-cool.org/dl/%{name}-%{version}%{subver}.tar.gz
-# Source0-md5:	001e5d9ecc65d80e14486d5157eb5d42
+Source0:	http://roaraudio.keep-cool.org/dl/%{name}-%{version}.tar.gz
+# Source0-md5:	74b5ea7805f7986954435cfb9917827e
+Patch0:		%{name}-celt.patch
+Patch1:		%{name}-flac.patch
+Patch2:		%{name}-arts.patch
 URL:		http://roaraudio.keep-cool.org/
-%{?with_arts:BuildRequires:	arts-devel}
+BuildRequires:	alsa-lib-devel >= 0.9
+%{?with_arts:BuildRequires:	artsc-devel}
 %{?with_audacious:BuildRequires: audacious-devel}
-BuildRequires:	celt-devel >= %{celt_version}
+BuildRequires:	celt-devel >= %{celt_ver}
+BuildRequires:	dbus-devel
 %{?with_esd:BuildRequires:	esound-devel}
+BuildRequires:	flac-devel
+BuildRequires:	gtk+2-devel >= 2.0
+BuildRequires:	jack-audio-connection-kit-devel
 BuildRequires:	libao-devel
 BuildRequires:	libfishsound-devel
 %{?with_fishsound:BuildRequires:	libfishsound-devel}
+BuildRequires:	libgcrypt-devel
 BuildRequires:	libogg-devel
 BuildRequires:	liboggz-devel
 BuildRequires:	libsamplerate-devel
@@ -49,12 +63,15 @@ BuildRequires:	libvorbis-devel
 BuildRequires:	openslp-devel
 BuildRequires:	openssl-devel
 BuildRequires:	pkgconfig
+BuildRequires:	portaudio-devel >= 19
 %{?with_pulseaudio:BuildRequires:	pulseaudio-devel}
 BuildRequires:	sed >= 4.0
 BuildRequires:	speex-devel >= 1:1.2
 BuildRequires:	which
+BuildRequires:	xorg-lib-libX11-devel
 %{?with_xmms:BuildRequires:	xmms-devel}
 %{?with_yiff:BuildRequires:	yiff-devel}
+BuildRequires:	zlib-devel
 BuildRoot:	%{tmpdir}/%{name}-%{version}-root-%(id -u -n)
 
 %description
@@ -73,7 +90,7 @@ klienci sieciowi, ponieważ serwer jest w pełni przezroczysty sieciowo.
 Summary:	RoarAudio sound system shared libraries
 Summary(pl.UTF-8):	Biblioteki współdzielone systemu dźwięku RoarAudio
 Group:		Libraries
-Requires:	celt >= %{celt_version}
+Requires:	celt >= %{celt_ver}
 
 %description -n libroar
 This package contains the shared libraries for the RoarAudio sound
@@ -100,7 +117,7 @@ Summary:	RoarAudio sound system server daemon
 Summary(pl.UTF-8):	Demon serwera systemu dźwięku RoarAudio
 Group:		Daemons
 # roaraudio may call binaries which should be installed
-Requires:	celt >= %{celt_version}
+Requires:	celt >= %{celt_ver}
 Requires:	flac
 Requires:	vorbis-tools
 
@@ -117,7 +134,7 @@ Summary:	RoarAudio sound system utilities
 Summary(pl.UTF-8):	Narzędzia dla systemu dźwięku RoarAudio
 Group:		Applications/Multimedia
 # roaraudio may call binaries which should be installed
-Requires:	celt >= %{celt_version}
+Requires:	celt >= %{celt_ver}
 Requires:	gnuplot
 
 %description utils
@@ -127,20 +144,6 @@ system.
 %description utils -l pl.UTF-8
 Ten pakiet zawiera narzędzia linii poleceń dla systemu dźwięku
 RoarAudio.
-
-%package compat-esound
-Summary:	RoarAudio sound system compatibility system for EsounD
-Summary(pl.UTF-8):	Warstwa zgodności systemu dźwięku RoarAudio dla systemu EsounD
-Group:		Libraries
-Requires:	%{name} = %{version}-%{release}
-
-%description compat-esound
-This package contains the EsounD compatibility system for the
-RoarAudio sound system.
-
-%description compat-esound -l pl.UTF-8
-Ten pakiet zawiera warstwę zgodności systemu dźwięku RoarAudio dla
-systemu EsounD.
 
 %package compat-arts
 Summary:	RoarAudio sound system compatibility system for aRts
@@ -156,6 +159,20 @@ sound system.
 Ten pakiet zawiera warstwę zgodności systemu dźwięku RoarAudio dla
 systemu aRts.
 
+%package compat-esound
+Summary:	RoarAudio sound system compatibility system for EsounD
+Summary(pl.UTF-8):	Warstwa zgodności systemu dźwięku RoarAudio dla systemu EsounD
+Group:		Libraries
+Requires:	%{name} = %{version}-%{release}
+
+%description compat-esound
+This package contains the EsounD compatibility system for the
+RoarAudio sound system.
+
+%description compat-esound -l pl.UTF-8
+Ten pakiet zawiera warstwę zgodności systemu dźwięku RoarAudio dla
+systemu EsounD.
+
 %package compat-nas
 Summary:	RoarAudio sound system compatibility system for NAS
 Summary(pl.UTF-8):	Warstwa zgodności systemu dźwięku RoarAudio dla systemu NAS
@@ -170,6 +187,20 @@ sound system.
 Ten pakiet zawiera warstwę zgodności systemu dźwięku RoarAudio dla
 systemu NAS.
 
+%package compat-oss
+Summary:	RoarAudio sound system compatibility system for OSS
+Summary(pl.UTF-8):	Warstwa zgodności systemu dźwięku RoarAudio dla systemu OSS
+Group:		Libraries
+Requires:	%{name} = %{version}-%{release}
+
+%description compat-oss
+This package contains the OSS compatibility system for the RoarAudio
+sound system.
+
+%description compat-oss -l pl.UTF-8
+Ten pakiet zawiera warstwę zgodności systemu dźwięku RoarAudio dla
+systemu OSS.
+
 %package compat-pulseaudio
 Summary:	RoarAudio sound system compatibility system for PulseAudio
 Summary(pl.UTF-8):	Warstwa zgodności systemu dźwięku RoarAudio dla systemu PulseAudio
@@ -183,6 +214,20 @@ RoarAudio sound system.
 %description compat-pulseaudio -l pl.UTF-8
 Ten pakiet zawiera warstwę zgodności systemu dźwięku RoarAudio dla
 systemu PulseAudio.
+
+%package compat-rsound
+Summary:	RoarAudio sound system compatibility system for rsound
+Summary(pl.UTF-8):	Warstwa zgodności systemu dźwięku RoarAudio dla systemu rsound
+Group:		Libraries
+Requires:	%{name} = %{version}-%{release}
+
+%description compat-rsound
+This package contains the rsound compatibility system for the
+RoarAudio sound system.
+
+%description compat-rsound -l pl.UTF-8
+Ten pakiet zawiera warstwę zgodności systemu dźwięku RoarAudio dla
+systemu rsound.
 
 %package compat-sndfile
 Summary:	RoarAudio sound system compatibility system for sndfile
@@ -257,27 +302,27 @@ Ten pakiet zawiera wtyczkę systemu dźwięku RoarAudio dla odtwarzacza
 Audacious Media Player.
 
 %prep
-%setup -q -n %{name}-%{version}%{subver}
-
-find -name Makefile | xargs grep -l -- '-g -Wall -O2' | xargs sed -i -e 's@-g -Wall -O2@%{rpmcflags}@'
-
-sed -i -e 's,unknown,%{version},' roarclients/roar-config.c
+%setup -q
+%patch0 -p1
+%patch1 -p1
+%patch2 -p1
 
 sed -i -e '
-	%{!?with_alsa:/libroarartsc.so/d}
+	%{!?with_arts:/libroarartsc.so/d}
 	%{!?with_esd:/libroaresd.so/d}
 	%{!?with_pulseaudio:/libroarpulse.so/d}
+	%{!?with_rsound:/libroarrsound.so/d}
 	%{!?with_sndfile:/libroarsndio.so/d}
 	%{!?with_yiff:/libroaryiff.so/d}
 	%{!?with_oss:/libroaross.so/d}
 ' symlinks.comp
 
-sed -i -e '/ROAR_HAVE_LIBCELT/s/\<celt\>/celt0/' configure
-
 %build
 # NOTE: not autoconf derivered configure
 ./configure \
 	--cc "%{__cc}" \
+	--cflags "%{rpmcflags} %{rpmcppflags}" \
+	--ldflags "%{rpmldflags}" \
 	--prefix %{_prefix} \
 	--prefix-lib %{_libdir} \
 	--prefix-comp-bins %{_bindir} \
@@ -294,6 +339,7 @@ sed -i -e '/ROAR_HAVE_LIBCELT/s/\<celt\>/celt0/' configure
 	%{!?with_esd:TARGETS_ESD=} \
 	%{!?with_arts:TARGETS_ARTS=} \
 	%{!?with_nas:TARGETS_NAS=} \
+	%{!?with_rsound:TARGETS_RSOUND=} \
 	%{!?with_yiff:TARGETS_YIFF=} \
 	%{!?with_pulseaudio:TARGETS_PA=}
 
@@ -302,9 +348,6 @@ rm -rf $RPM_BUILD_ROOT
 %{__make} install \
 	DESTDIR=$RPM_BUILD_ROOT
 
-# created by ldconfig
-#rm -f $RPM_BUILD_ROOT%{_libdir}/lib*.so.0.3
-
 # make symlinks relative
 for lib in $RPM_BUILD_ROOT%{_libdir}/lib*.so*; do
 	[ -L $lib ] || continue
@@ -312,8 +355,8 @@ for lib in $RPM_BUILD_ROOT%{_libdir}/lib*.so*; do
 	ln -snf $(basename $target) $lib
 done
 
-# remove non header files
-%{__rm} -v $RPM_BUILD_ROOT%{_includedir}/*/*.h.*
+# old test programs, not installed now
+%{__rm} $RPM_BUILD_ROOT%{_mandir}/man1/{roarfctest,roarsocktypes}.1
 
 %clean
 rm -rf $RPM_BUILD_ROOT
@@ -336,9 +379,12 @@ rm -rf $RPM_BUILD_ROOT
 %files
 %defattr(644,root,root,755)
 %doc AUTHORS ChangeLog HACKING README TODO
+%attr(755,root,root) %{_bindir}/dtmfdial
 %attr(755,root,root) %{_bindir}/roarbidir
 %attr(755,root,root) %{_bindir}/roarcat*
+%attr(755,root,root) %{_bindir}/roarclientpass
 %attr(755,root,root) %{_bindir}/roarctl
+%attr(755,root,root) %{_bindir}/roardtmf
 %attr(755,root,root) %{_bindir}/roarfish
 %attr(755,root,root) %{_bindir}/roarify
 %attr(755,root,root) %{_bindir}/roarinterconnect
@@ -347,13 +393,15 @@ rm -rf $RPM_BUILD_ROOT
 %attr(755,root,root) %{_bindir}/roarradio
 %attr(755,root,root) %{_bindir}/roarshout
 %attr(755,root,root) %{_bindir}/roarsockconnect
-%attr(755,root,root) %{_bindir}/roarsocktypes
 %attr(755,root,root) %{_bindir}/roartypes
+%attr(755,root,root) %{_bindir}/roarvio
 %attr(755,root,root) %{_bindir}/roarvorbis
 %{_mandir}/man1/roarbaseclients.1*
 %{_mandir}/man1/roarbidir.1*
 %{_mandir}/man1/roarcat*.1*
+%{_mandir}/man1/roarclientpass.1*
 %{_mandir}/man1/roarctl.1*
+%{_mandir}/man1/roardtmf.1*
 %{_mandir}/man1/roarfish.1*
 %{_mandir}/man1/roarify.1*
 %{_mandir}/man1/roarinterconnect.1*
@@ -362,28 +410,21 @@ rm -rf $RPM_BUILD_ROOT
 %{_mandir}/man1/roarradio.1*
 %{_mandir}/man1/roarshout.1*
 %{_mandir}/man1/roarsockconnect.1*
-%{_mandir}/man1/roarsocktypes.1*
 %{_mandir}/man1/roartestclients.1*
 %{_mandir}/man1/roartypes.1*
+%{_mandir}/man1/roarvio.1*
 %{_mandir}/man1/roarvorbis.1*
-%{_mandir}/man7/*.7*
-
-%attr(755,root,root) %{_libdir}/libroaross.so.*.*.*
-%attr(755,root,root) %ghost %{_libdir}/libroaross.so.0
-%attr(755,root,root) %{_libdir}/libroaross.so
+%{_mandir}/man7/RoarAudio.7*
+%{_mandir}/man7/roardecnet.7*
+%{_mandir}/man7/roartips.7*
 
 %files -n libroar
 %defattr(644,root,root,755)
-%attr(755,root,root) %{_libdir}/libroar.so.*.*.*
-%attr(755,root,root) %ghost %{_libdir}/libroar.so.0
-%attr(755,root,root) %{_libdir}/libroardsp.so.*.*.*
-%attr(755,root,root) %ghost %{_libdir}/libroardsp.so.0
-%attr(755,root,root) %{_libdir}/libroarmidi.so.*.*.*
-%attr(755,root,root) %ghost %{_libdir}/libroarmidi.so.0
-%attr(755,root,root) %{_libdir}/libroarlight.so.*.*.*
-%attr(755,root,root) %ghost %{_libdir}/libroarlight.so.0
-%attr(755,root,root) %{_libdir}/libroareio.so.*.*.*
-%attr(755,root,root) %ghost %{_libdir}/libroareio.so.0
+%attr(755,root,root) %{_libdir}/libroar.so.1
+%attr(755,root,root) %{_libdir}/libroardsp.so.1
+%attr(755,root,root) %{_libdir}/libroareio.so.1
+%attr(755,root,root) %{_libdir}/libroarlight.so.1
+%attr(755,root,root) %{_libdir}/libroarmidi.so.1
 
 %files -n libroar-devel
 %defattr(644,root,root,755)
@@ -401,11 +442,21 @@ rm -rf $RPM_BUILD_ROOT
 %{_includedir}/libroarmidi
 %{_includedir}/libroarpulse
 %{_includedir}/libroarsndio
+%{_includedir}/libroarrsound
 %{_includedir}/libroaryiff
 %{_includedir}/roaraudio.h
 %{_includedir}/roaraudio
+%{_pkgconfigdir}/libroar.pc
+%{_pkgconfigdir}/libroardsp.pc
+%{_pkgconfigdir}/libroareio.pc
+%{_pkgconfigdir}/libroarlight.pc
+%{_pkgconfigdir}/libroarmidi.pc
 %{_mandir}/man1/roar-config.1*
-%{_mandir}/man3/*.3*
+%{_mandir}/man3/roar_*.3*
+%{_mandir}/man7/libroar.7*
+%{_mandir}/man7/roartut.7*
+%{_mandir}/man7/roarvio.7*
+%{_mandir}/man7/roarvs.7*
 
 %files server
 %defattr(644,root,root,755)
@@ -415,7 +466,6 @@ rm -rf $RPM_BUILD_ROOT
 
 %files utils
 %defattr(644,root,root,755)
-%attr(755,root,root) %{_bindir}/roarfctest
 %attr(755,root,root) %{_bindir}/roarfilt
 %attr(755,root,root) %{_bindir}/roarsin
 %attr(755,root,root) %{_bindir}/roarvumeter
@@ -425,18 +475,34 @@ rm -rf $RPM_BUILD_ROOT
 %{_mandir}/man1/roarsin.1*
 %{_mandir}/man1/roarvumeter.1*
 
+%if %{with arts}
+%files compat-arts
+%defattr(644,root,root,755)
+%attr(755,root,root) %{_bindir}/artscat
+%attr(755,root,root) %{_bindir}/artsd
+%attr(755,root,root) %{_bindir}/artsdsp
+%attr(755,root,root) %{_bindir}/artsplay
+%attr(755,root,root) %{_libdir}/libroarartsc.so.1
+# compat links pointing to libroarartsc.so.1
+%attr(755,root,root) %{_libdir}/libartsc.so.0
+# needed?
+%attr(755,root,root) %{_libdir}/libroarartsc.so
+%attr(755,root,root) %{_libdir}/libartsc.so
+%attr(755,root,root) %{_libdir}/libartsc.so.0.0
+%attr(755,root,root) %{_libdir}/libartsc.so.0.0.0
+%endif
+
 %if %{with esd}
 %files compat-esound
 %defattr(644,root,root,755)
 %attr(755,root,root) %{_bindir}/esd
 %attr(755,root,root) %{_bindir}/esdcat
+%attr(755,root,root) %{_bindir}/esddsp
 %attr(755,root,root) %{_bindir}/esdfilt
 %attr(755,root,root) %{_bindir}/esdmon
 %attr(755,root,root) %{_bindir}/esdplay
-%attr(755,root,root) %{_libdir}/libroaresd.so.*.*.*
-%attr(755,root,root) %ghost %{_libdir}/libroaresd.so.0
-
-# compat libs pointing to libroaresd
+%attr(755,root,root) %{_libdir}/libroaresd.so.1
+# compat links pointing to libroaresd
 %attr(755,root,root) %{_libdir}/libesd.so.0
 # needed?
 %attr(755,root,root) %{_libdir}/libroaresd.so
@@ -445,57 +511,74 @@ rm -rf $RPM_BUILD_ROOT
 %attr(755,root,root) %{_libdir}/libesd.so.0.2.36
 %endif
 
-%if %{with arts}
-%files compat-arts
-%defattr(644,root,root,755)
-%attr(755,root,root) %{_bindir}/artscat
-%attr(755,root,root) %{_bindir}/artsd
-%attr(755,root,root) %{_bindir}/artsplay
-# compat libs pointing to libroarpulse
-%attr(755,root,root) %{_libdir}/libartsc.so.0
-# needed?
-%attr(755,root,root) %{_libdir}/libartsc.so
-%attr(755,root,root) %{_libdir}/libartsc.so.0.0
-%attr(755,root,root) %{_libdir}/libartsc.so.0.0.0
-%attr(755,root,root) %{_libdir}/libroarartsc.so
-%endif
-
 %if %{with nas}
 %files compat-nas
 %defattr(644,root,root,755)
+%attr(755,root,root) %{_bindir}/audial
+%attr(755,root,root) %{_bindir}/audiooss
 %attr(755,root,root) %{_bindir}/auplay
 %endif
+
+%files compat-oss
+%defattr(644,root,root,755)
+%attr(755,root,root) %{_libdir}/libroaross.so.1
+%attr(755,root,root) %{_libdir}/libroaross.so
+# compat symlinks to libroaross.so.1
+%attr(755,root,root) %{_libdir}/liboss.so
+%attr(755,root,root) %{_libdir}/libossaudio.so
 
 %if %{with pulseaudio}
 %files compat-pulseaudio
 %defattr(644,root,root,755)
 %attr(755,root,root) %{_bindir}/pacat
+%attr(755,root,root) %{_bindir}/padsp
 %attr(755,root,root) %{_bindir}/paplay
-%attr(755,root,root) %{_libdir}/libroarpulse.so
-%attr(755,root,root) %ghost %{_libdir}/libroarpulse.so.0
-%attr(755,root,root) %{_libdir}/libroarpulse.so.*.*.*
-# compat libs pointing to libroarpulse
-%attr(755,root,root) %{_libdir}/libpulse-simple.so.0
+%attr(755,root,root) %{_libdir}/libroarpulse.so.1
+%attr(755,root,root) %{_libdir}/libroarpulse-simple.so.1
+# compat links pointing to libroarpulse.so.1 and libroarpulse-simple.so.1
 %attr(755,root,root) %{_libdir}/libpulse.so.0
+%attr(755,root,root) %{_libdir}/libpulse-simple.so.0
 # needed?
-%attr(755,root,root) %{_libdir}/libpulse-simple.so
-%attr(755,root,root) %{_libdir}/libpulse-simple.so.0.0
-%attr(755,root,root) %{_libdir}/libpulse-simple.so.0.0.0
-%attr(755,root,root) %{_libdir}/libpulse-simple.so.0.0.1
+%attr(755,root,root) %{_libdir}/libroarpulse.so
+%attr(755,root,root) %{_libdir}/libroarpulse-simple.so
 %attr(755,root,root) %{_libdir}/libpulse.so
 %attr(755,root,root) %{_libdir}/libpulse.so.0.1
 %attr(755,root,root) %{_libdir}/libpulse.so.0.1.0
 %attr(755,root,root) %{_libdir}/libpulse.so.0.4
 %attr(755,root,root) %{_libdir}/libpulse.so.0.4.1
+%attr(755,root,root) %{_libdir}/libpulse.so.0.12.2
+%attr(755,root,root) %{_libdir}/libpulse-simple.so
+%attr(755,root,root) %{_libdir}/libpulse-simple.so.0.0
+%attr(755,root,root) %{_libdir}/libpulse-simple.so.0.0.0
+%attr(755,root,root) %{_libdir}/libpulse-simple.so.0.0.1
+%attr(755,root,root) %{_libdir}/libpulse-simple.so.0.0.2
+%attr(755,root,root) %{_libdir}/libpulse-simple.so.0.0.3
+%endif
+
+%if %{with rsound}
+%files compat-rsound
+%defattr(644,root,root,755)
+%attr(755,root,root) %{_bindir}/ross
+%attr(755,root,root) %{_bindir}/rsd
+%attr(755,root,root) %{_bindir}/rsdplay
+# not built yet
+#%attr(755,root,root) %{_libdir}/libroarrsound.so.1
+#%attr(755,root,root) %{_libdir}/libroarrsound.so
+# compat symlinks to libroarrsound.so.1
+#%attr(755,root,root) %{_libdir}/librsound.so.0
+#%attr(755,root,root) %{_libdir}/librsound.so.1
+#%attr(755,root,root) %{_libdir}/librsound.so
 %endif
 
 %if %{with sndfile}
 %files compat-sndfile
 %defattr(644,root,root,755)
-%attr(755,root,root) %ghost %{_libdir}/libroarsndio.so.0
-%attr(755,root,root) %{_libdir}/libroarsndio.so.*.*.*
+%attr(755,root,root) %{_libdir}/libroarsndio.so.1
+# compat symlink to libroarsndio.so.1
+%attr(755,root,root) %{_libdir}/libsndio.so.0
 # needed?
 %attr(755,root,root) %{_libdir}/libroarsndio.so
+%attr(755,root,root) %{_libdir}/libsndio.so
 %endif
 
 %if %{with yiff}
@@ -504,12 +587,12 @@ rm -rf $RPM_BUILD_ROOT
 %attr(755,root,root) %{_bindir}/yiff
 %attr(755,root,root) %{_bindir}/yplay
 %attr(755,root,root) %{_bindir}/yshutdown
-%attr(755,root,root) %ghost %{_libdir}/libroaryiff.so.0
-%attr(755,root,root) %{_libdir}/libroaryiff.so.*.*.*
+%attr(755,root,root) %{_libdir}/libroaryiff.so.1
+# compat symlink to libroaryiff.so.1
 %attr(755,root,root) %{_libdir}/libY2.so.14
 # needed?
-%attr(755,root,root) %{_libdir}/libY2.so
 %attr(755,root,root) %{_libdir}/libroaryiff.so
+%attr(755,root,root) %{_libdir}/libY2.so
 %endif
 
 %if %{with xmms}

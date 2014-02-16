@@ -1,0 +1,31 @@
+--- roaraudio-0.4/roard/codecfilter_flac.c.orig	2014-02-07 21:52:35.829668045 +0100
++++ roaraudio-0.4/roard/codecfilter_flac.c	2014-02-07 21:52:40.459667849 +0100
+@@ -28,6 +28,10 @@
+ 
+ #ifdef ROAR_HAVE_LIBFLAC
+ 
++#if ROAR_HAVE_FLAC_VERSION >= _ROAR_MKVERSION(1,2,0)
++#define ROAR_HAVE_FLAC_1_2
++#endif
++
+ FLAC__StreamDecoderReadStatus cf_flac_cb_read(const FLAC__StreamDecoder *decoder, FLAC__byte buffer[], unsigned *bytes, void *client_data) {
+  struct codecfilter_flac_inst * self = client_data;
+  ssize_t ret;
+@@ -209,7 +213,7 @@ int cf_flac_open(CODECFILTER_USERDATA_T
+   return -1;
+  }
+ 
+-#ifndef ROAR_HAVE_FLAC_VERSION_1_2_1
++#ifndef ROAR_HAVE_FLAC_1_2
+  FLAC__stream_decoder_set_read_callback(self->decoder.decoder, cf_flac_cb_read);
+  FLAC__stream_decoder_set_write_callback(self->decoder.decoder, cf_flac_cb_write);
+  FLAC__stream_decoder_set_metadata_callback(self->decoder.decoder, cf_flac_cb_metadata);
+@@ -219,7 +223,7 @@ int cf_flac_open(CODECFILTER_USERDATA_T
+ 
+  FLAC__stream_decoder_set_metadata_respond(self->decoder.decoder, FLAC__METADATA_TYPE_VORBIS_COMMENT);
+ 
+-#ifdef ROAR_HAVE_FLAC_VERSION_1_2_1
++#ifdef ROAR_HAVE_FLAC_1_2
+  FLAC__stream_decoder_init_stream(self->decoder.decoder, cf_flac_cb_read, NULL, NULL, NULL, NULL, cf_flac_cb_write, cf_flac_cb_metadata, cf_flac_cb_error, self);
+ #else
+  FLAC__stream_decoder_init(self->decoder.decoder);
