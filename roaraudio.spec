@@ -1,7 +1,6 @@
 # TODO
-# - RAUM (libraum, raum.h)
+# - RAUM (libraum, raum.h) [http://raum.keep-cool.org/, http://roaraudio.keep-cool.org/uniraum.html - not released yet]
 # - libossaudio (OSS 4?)
-# - librsound (librsound, rsound.h)
 # - PABLIO (libpablio, pablio/pablio.h)
 # - see HACKING for packaging suggestions
 # - libroar/libroar-devel should be complete, rest needs more work
@@ -18,7 +17,7 @@
 %bcond_without	nas		# NAS audio output
 %bcond_without	oss		# OSS compatibility layer
 %bcond_without	pulseaudio	# pulseaudio output
-%bcond_with	rsound		# rsound support
+%bcond_without	rsound		# RSound support
 %bcond_without	sndfile		# sndfile output
 %bcond_without	yiff		# YIFF sound server support
 %bcond_without	xmms		# XMMS plugin
@@ -216,18 +215,18 @@ Ten pakiet zawiera warstwę zgodności systemu dźwięku RoarAudio dla
 systemu PulseAudio.
 
 %package compat-rsound
-Summary:	RoarAudio sound system compatibility system for rsound
-Summary(pl.UTF-8):	Warstwa zgodności systemu dźwięku RoarAudio dla systemu rsound
+Summary:	RoarAudio sound system compatibility system for RSound
+Summary(pl.UTF-8):	Warstwa zgodności systemu dźwięku RoarAudio dla systemu RSound
 Group:		Libraries
 Requires:	%{name} = %{version}-%{release}
 
 %description compat-rsound
-This package contains the rsound compatibility system for the
+This package contains the RSound compatibility system for the
 RoarAudio sound system.
 
 %description compat-rsound -l pl.UTF-8
 Ten pakiet zawiera warstwę zgodności systemu dźwięku RoarAudio dla
-systemu rsound.
+systemu RSound.
 
 %package compat-sndfile
 Summary:	RoarAudio sound system compatibility system for sndfile
@@ -562,12 +561,12 @@ rm -rf $RPM_BUILD_ROOT
 %attr(755,root,root) %{_bindir}/rsd
 %attr(755,root,root) %{_bindir}/rsdplay
 # not built yet
-#%attr(755,root,root) %{_libdir}/libroarrsound.so.1
-#%attr(755,root,root) %{_libdir}/libroarrsound.so
+%attr(755,root,root) %{_libdir}/libroarrsound.so.1
+%attr(755,root,root) %{_libdir}/libroarrsound.so
 # compat symlinks to libroarrsound.so.1
-#%attr(755,root,root) %{_libdir}/librsound.so.0
-#%attr(755,root,root) %{_libdir}/librsound.so.1
-#%attr(755,root,root) %{_libdir}/librsound.so
+%attr(755,root,root) %{_libdir}/librsound.so.0
+%attr(755,root,root) %{_libdir}/librsound.so.1
+%attr(755,root,root) %{_libdir}/librsound.so
 %endif
 
 %if %{with sndfile}
